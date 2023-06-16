@@ -67,7 +67,7 @@ impl DataPointBuilder {
     pub fn build(self) -> Result<DataPoint, DataPointError> {
         ensure!(
             !self.fields.is_empty(),
-            AtLeastOneFieldRequired {
+            AtLeastOneFieldRequiredSnafu {
                 data_point_builder: self
             }
         );

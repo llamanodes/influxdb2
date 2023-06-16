@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
-use crate::{Client, Http, RequestError, ReqwestProcessing, Serializing};
+use crate::{Client, HttpSnafu, RequestError, ReqwestProcessingSnafu, SerializingSnafu};
 
 use base64::decode;
 use chrono::DateTime;
@@ -30,16 +30,16 @@ impl Client {
             .request(Method::GET, &req_url)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => Ok(response
                 .json::<FluxSuggestions>()
                 .await
-                .context(ReqwestProcessing)?),
+                .context(ReqwestProcessingSnafu)?),
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -55,16 +55,16 @@ impl Client {
             .request(Method::GET, &req_url)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => Ok(response
                 .json::<FluxSuggestion>()
                 .await
-                .context(ReqwestProcessing)?),
+                .context(ReqwestProcessingSnafu)?),
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -72,7 +72,7 @@ impl Client {
     /// Query
     pub async fn query<T: FromMap>(&self, query: Option<Query>) -> Result<Vec<T>, RequestError> {
         let req_url = self.url("/api/v2/query");
-        let body = serde_json::to_string(&query.unwrap_or_default()).context(Serializing)?;
+        let body = serde_json::to_string(&query.unwrap_or_default()).context(SerializingSnafu)?;
 
         let response = self
             .request(Method::POST, &req_url)
@@ -82,7 +82,7 @@ impl Client {
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => {
@@ -96,8 +96,8 @@ impl Client {
                 Ok(res)
             }
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -105,7 +105,7 @@ impl Client {
     /// Query Raw
     pub async fn query_raw(&self, query: Option<Query>) -> Result<Vec<FluxRecord>, RequestError> {
         let req_url = self.url("/api/v2/query");
-        let body = serde_json::to_string(&query.unwrap_or_default()).context(Serializing)?;
+        let body = serde_json::to_string(&query.unwrap_or_default()).context(SerializingSnafu)?;
 
         let response = self
             .request(Method::POST, &req_url)
@@ -115,7 +115,7 @@ impl Client {
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => {
@@ -128,8 +128,8 @@ impl Client {
                 Ok(records)
             }
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -144,19 +144,19 @@ impl Client {
         let response = self
             .request(Method::POST, &req_url)
             .header("Content-Type", "application/json")
-            .body(serde_json::to_string(&query.unwrap_or_default()).context(Serializing)?)
+            .body(serde_json::to_string(&query.unwrap_or_default()).context(SerializingSnafu)?)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => Ok(response
                 .json::<AnalyzeQueryResponse>()
                 .await
-                .context(ReqwestProcessing)?),
+                .context(ReqwestProcessingSnafu)?),
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -173,20 +173,20 @@ impl Client {
             .header("Content-Type", "application/json")
             .body(
                 serde_json::to_string(&language_request.unwrap_or_default())
-                    .context(Serializing)?,
+                    .context(SerializingSnafu)?,
             )
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => Ok(response
                 .json::<AstResponse>()
                 .await
-                .context(ReqwestProcessing)?),
+                .context(ReqwestProcessingSnafu)?),
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -199,7 +199,7 @@ impl Client {
 
 schema.measurements(bucket: "{bucket}") "#
         ));
-        let body = serde_json::to_string(&query).context(Serializing)?;
+        let body = serde_json::to_string(&query).context(SerializingSnafu)?;
 
         let response = self
             .request(Method::POST, &req_url)
@@ -209,7 +209,7 @@ schema.measurements(bucket: "{bucket}") "#
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => {
@@ -228,8 +228,8 @@ schema.measurements(bucket: "{bucket}") "#
                     .collect())
             }
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -250,7 +250,7 @@ schema.measurements(bucket: "{bucket}") "#
             )"#
         ));
 
-        let body = serde_json::to_string(&query).context(Serializing)?;
+        let body = serde_json::to_string(&query).context(SerializingSnafu)?;
 
         let response = self
             .request(Method::POST, &req_url)
@@ -260,7 +260,7 @@ schema.measurements(bucket: "{bucket}") "#
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => {
@@ -279,8 +279,8 @@ schema.measurements(bucket: "{bucket}") "#
                     .collect())
             }
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }
@@ -303,7 +303,7 @@ schema.measurements(bucket: "{bucket}") "#
             )"#
         ));
 
-        let body = serde_json::to_string(&query).context(Serializing)?;
+        let body = serde_json::to_string(&query).context(SerializingSnafu)?;
 
         let response = self
             .request(Method::POST, &req_url)
@@ -313,7 +313,7 @@ schema.measurements(bucket: "{bucket}") "#
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         match response.status() {
             StatusCode::OK => {
@@ -332,8 +332,8 @@ schema.measurements(bucket: "{bucket}") "#
                     .collect())
             }
             status => {
-                let text = response.text().await.context(ReqwestProcessing)?;
-                Http { status, text }.fail()?
+                let text = response.text().await.context(ReqwestProcessingSnafu)?;
+                HttpSnafu { status, text }.fail()?
             }
         }
     }

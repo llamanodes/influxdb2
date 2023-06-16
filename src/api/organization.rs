@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 
 use crate::models::Organizations;
-use crate::{Client, Http, RequestError, ReqwestProcessing};
+use crate::{Client, HttpSnafu, RequestError, ReqwestProcessingSnafu};
 
 impl Client {
     /// List all organizations.
@@ -25,19 +25,19 @@ impl Client {
             .request(Method::GET, &url)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         if !response.status().is_success() {
             let status = response.status();
-            let text = response.text().await.context(ReqwestProcessing)?;
-            let res = Http { status, text }.fail();
+            let text = response.text().await.context(ReqwestProcessingSnafu)?;
+            let res = HttpSnafu { status, text }.fail();
             return res;
         }
 
         let res = response
             .json::<Organizations>()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
         Ok(res)
     }
 }

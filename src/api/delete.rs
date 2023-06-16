@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 use reqwest::Method;
 use snafu::ResultExt;
 
-use crate::{Client, Http, RequestError, ReqwestProcessing};
+use crate::{Client, HttpSnafu, RequestError, ReqwestProcessingSnafu};
 
 impl Client {
     /// Delete data points from a bucket matching specified parameters.
@@ -47,12 +47,12 @@ impl Client {
             .body(body)
             .send()
             .await
-            .context(ReqwestProcessing)?;
+            .context(ReqwestProcessingSnafu)?;
 
         if !response.status().is_success() {
             let status = response.status();
-            let text = response.text().await.context(ReqwestProcessing)?;
-            Http { status, text }.fail()?;
+            let text = response.text().await.context(ReqwestProcessingSnafu)?;
+            HttpSnafu { status, text }.fail()?;
         }
 
         Ok(())
