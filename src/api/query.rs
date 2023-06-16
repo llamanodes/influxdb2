@@ -366,7 +366,7 @@ impl FromStr for DataType {
             "dateTime:RFC3339" => Ok(DataType::TimeRFC),
             "dateTime:RFC3339Nano" => Ok(DataType::TimeRFC),
             _ => Err(RequestError::Deserializing {
-                text: format!("unknown datatype: {}", input),
+                text: "unknown datatype".into(),
             }),
         }
     }
@@ -465,7 +465,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
             }
             if self.table.is_none() {
                 return Err(RequestError::Deserializing {
-                    text: String::from("annotations not found"),
+                    text: "annotations not found".into(),
                 });
             }
             if row.len() - 1 != self.table.as_ref().unwrap().columns.len() {
@@ -474,7 +474,8 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                         "row has different number of columns than the table: {} vs {}",
                         row.len() - 1,
                         self.table.as_ref().unwrap().columns.len(),
-                    ),
+                    )
+                    .into(),
                 });
             }
             if let Some(s) = row.get(0) {
@@ -485,7 +486,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                                 // Parse column name (csv header)
                                 if !data_type_annotation_found {
                                     return Err(RequestError::Deserializing {
-                                        text: String::from("datatype annotation not found"),
+                                        text: "datatype annotation not found".into(),
                                     });
                                 }
                                 if row.get(1).unwrap() == "error" {
@@ -512,7 +513,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                                     reference = format!(",{}", s);
                                 }
                                 return Err(RequestError::Deserializing {
-                                    text: format!("{}{}", msg, reference),
+                                    text: format!("{}{}", msg, reference).into(),
                                 });
                             }
                             _ => {}
@@ -555,7 +556,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                     }
                     _ => {
                         return Err(RequestError::Deserializing {
-                            text: format!("invalid first cell: {}", s),
+                            text: format!("invalid first cell: {}", s).into(),
                         });
                     }
                 }
@@ -632,7 +633,11 @@ fn parse_value(s: &str, t: DataType, name: &str) -> Result<Value, RequestError> 
     match t {
         DataType::String => Ok(Value::String(String::from(s))),
         DataType::Double => {
-            let v = s.parse::<f64>().unwrap();
+            let v = s
+                .parse::<f64>()
+                .map_err(|err| RequestError::Deserializing {
+                    text: format!("invalid double: {}, name: {}, err: {:?}", s, name, err).into(),
+                })?;
             Ok(Value::Double(OrderedFloat::from(v)))
         }
         DataType::Bool => {
@@ -643,25 +648,41 @@ fn parse_value(s: &str, t: DataType, name: &str) -> Result<Value, RequestError> 
             }
         }
         DataType::Long => {
-            let v = s.parse::<i64>().unwrap();
+            let v = s
+                .parse::<i64>()
+                .map_err(|err| RequestError::Deserializing {
+                    text: format!("invalid long: {}, name: {}, err: {:?}", s, name, err).into(),
+                })?;
             Ok(Value::Long(v))
         }
         DataType::UnsignedLong => {
-            let v = s.parse::<u64>().unwrap();
+            let v = s
+                .parse::<u64>()
+                .map_err(|err| RequestError::Deserializing {
+                    text: format!(
+                        "invalid unsigned long: {}, name: {}, err: {:?}",
+                        s, name, err
+                    )
+                    .into(),
+                })?;
             Ok(Value::UnsignedLong(v))
         }
         DataType::Duration => match parse_duration(s) {
             Ok(d) => Ok(Value::Duration(chrono::Duration::nanoseconds(d))),
-            Err(_) => Err(RequestError::Deserializing {
-                text: format!("invalid duration: {}, name: {}", s, name),
+            Err(err) => Err(RequestError::Deserializing {
+                text: format!("invalid duration: {}, name: {}, err: {:?}", s, name, err).into(),
             }),
         },
         DataType::Base64Binary => {
-            let b = decode(s).unwrap();
+            let b = decode(s).map_err(|err| RequestError::Deserializing {
+                text: format!("invalid base64: {}, name: {}, err: {:?}", s, name, err).into(),
+            })?;
             Ok(Value::Base64Binary(b))
         }
         DataType::TimeRFC => {
-            let t = DateTime::parse_from_rfc3339(s).unwrap();
+            let t = DateTime::parse_from_rfc3339(s).map_err(|err| RequestError::Deserializing {
+                text: format!("invalid time: {}, name: {}, err: {:?}", s, name, err).into(),
+            })?;
             Ok(Value::TimeRFC(t))
         }
     }

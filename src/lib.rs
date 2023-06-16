@@ -100,6 +100,8 @@
 //! }
 //! ```
 
+use std::borrow::Cow;
+
 use reqwest::{Method, Url};
 use secrecy::{ExposeSecret, Secret};
 use snafu::Snafu;
@@ -134,10 +136,10 @@ pub enum RequestError {
 
     /// While deserializing response from the Influx server, the underlying
     /// parsing library returned an error.
-    #[snafu(display("Error while parsing response: {}", text))]
+    #[snafu(display("Error while deserializing: {}", text))]
     Deserializing {
         /// Error description.
-        text: String,
+        text: Cow<'static, str>,
     },
 }
 
