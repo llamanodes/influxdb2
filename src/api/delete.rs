@@ -63,7 +63,6 @@ impl Client {
 mod tests {
     use super::*;
     use chrono::NaiveDate;
-    use mockito::mock;
 
     #[tokio::test]
     async fn delete_points() {
@@ -71,7 +70,9 @@ mod tests {
         let bucket = "some-bucket";
         let token = "some-token";
 
-        let mock_server = mock(
+        let mut server = mockito::Server::new();
+
+        let mock_server = server.mock(
                 "POST",
                 format!("/api/v2/delete?bucket={}&org={}", bucket, org).as_str(),
             )
@@ -81,7 +82,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let start = NaiveDate::from_ymd(2020, 1, 1).and_hms(0, 0, 0);
         let stop = NaiveDate::from_ymd(2021, 1, 1).and_hms(0, 0, 0);

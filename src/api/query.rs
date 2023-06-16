@@ -692,7 +692,7 @@ fn parse_value(s: &str, t: DataType, name: &str) -> Result<Value, RequestError> 
 mod tests {
     use super::*;
     use crate::FromDataPoint;
-    use mockito::{mock, Matcher};
+    use mockito::Matcher;
 
     #[derive(Default, FromDataPoint)]
     struct Empty {}
@@ -701,11 +701,14 @@ mod tests {
     async fn query_suggestions() {
         let token = "some-token";
 
-        let mock_server = mock("GET", "/api/v2/query/suggestions")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("GET", "/api/v2/query/suggestions")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_suggestions().await;
 
@@ -717,18 +720,21 @@ mod tests {
         let token = "some-token";
         let suggestion_name = "some-name";
 
-        let mock_server = mock(
-            "GET",
-            format!(
-                "/api/v2/query/suggestions/{name}",
-                name = crate::common::urlencode(suggestion_name)
-            )
-            .as_str(),
-        )
-        .match_header("Authorization", format!("Token {}", token).as_str())
-        .create();
+        let mut server = mockito::Server::new();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let mock_server = server
+            .mock(
+                "GET",
+                format!(
+                    "/api/v2/query/suggestions/{name}",
+                    name = crate::common::urlencode(suggestion_name)
+                )
+                .as_str(),
+            )
+            .match_header("Authorization", format!("Token {}", token).as_str())
+            .create();
+
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_suggestions_name(suggestion_name).await;
 
@@ -740,7 +746,11 @@ mod tests {
         let token = "some-token";
         let org = "some-org";
         let query: Option<Query> = Some(Query::new("some-influx-query-string".to_string()));
-        let mock_server = mock("POST", "/api/v2/query")
+
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Accepting-Encoding", "identity")
             .match_header("Content-Type", "application/json")
@@ -752,7 +762,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let _result = client.query::<Empty>(query).await;
 
@@ -765,7 +775,10 @@ mod tests {
         let org = "some-org";
         let query: Option<Query> = None;
 
-        let mock_server = mock("POST", "/api/v2/query")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Accepting-Encoding", "identity")
             .match_header("Content-Type", "application/json")
@@ -777,7 +790,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let _result = client.query::<Empty>(None).await;
 
@@ -788,7 +801,11 @@ mod tests {
     async fn query_analyze() {
         let token = "some-token";
         let query: Option<Query> = Some(Query::new("some-influx-query-string".to_string()));
-        let mock_server = mock("POST", "/api/v2/query/analyze")
+
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query/analyze")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Content-Type", "application/json")
             .match_body(
@@ -798,7 +815,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_analyze(query).await;
 
@@ -809,7 +826,11 @@ mod tests {
     async fn query_analyze_opt() {
         let token = "some-token";
         let query: Option<Query> = None;
-        let mock_server = mock("POST", "/api/v2/query/analyze")
+
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query/analyze")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Content-Type", "application/json")
             .match_body(
@@ -819,7 +840,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_analyze(query).await;
 
@@ -831,7 +852,11 @@ mod tests {
         let token = "some-token";
         let language_request: Option<LanguageRequest> =
             Some(LanguageRequest::new("some-influx-query-string".to_string()));
-        let mock_server = mock("POST", "/api/v2/query/ast")
+
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query/ast")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Content-Type", "application/json")
             .match_body(
@@ -841,7 +866,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_ast(language_request).await;
 
@@ -852,7 +877,11 @@ mod tests {
     async fn query_ast_opt() {
         let token = "some-token";
         let language_request: Option<LanguageRequest> = None;
-        let mock_server = mock("POST", "/api/v2/query/ast")
+
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/query/ast")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_header("Content-Type", "application/json")
             .match_body(
@@ -862,7 +891,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), "org", token);
+        let client = Client::new(server.url(), "org", token);
 
         let _result = client.query_ast(language_request).await;
 

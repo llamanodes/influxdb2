@@ -115,13 +115,14 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockito::mock;
 
     #[tokio::test]
     async fn is_onboarding_allowed() {
-        let mock_server = mock("GET", "/api/v2/setup").create();
+        let mut server = mockito::Server::new();
 
-        let client = Client::new(mockito::server_url(), "org", "");
+        let mock_server = server.mock("GET", "/api/v2/setup").create();
+
+        let client = Client::new(server.url(), "org", "");
 
         let _result = client.is_onboarding_allowed().await;
 
@@ -137,7 +138,9 @@ mod tests {
         let password = "some-password";
         let retention_period_hrs = 1;
 
-        let mock_server = mock("POST", "/api/v2/setup")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server.mock("POST", "/api/v2/setup")
             .match_body(
                 format!(
                     r#"{{"username":"{}","org":"{}","bucket":"{}","password":"{}","retentionPeriodHrs":{}}}"#,
@@ -146,7 +149,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let _result = client
             .onboarding(
@@ -171,7 +174,9 @@ mod tests {
         let password = "some-password";
         let retention_period_hrs = 1;
 
-        let mock_server = mock("POST", "/api/v2/setup/user")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server.mock("POST", "/api/v2/setup/user")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(
                 format!(
@@ -181,7 +186,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let _result = client
             .post_setup_user(
@@ -203,7 +208,10 @@ mod tests {
         let org = "some-org";
         let bucket = "some-bucket";
 
-        let mock_server = mock("POST", "/api/v2/setup")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/setup")
             .match_body(
                 format!(
                     r#"{{"username":"{}","org":"{}","bucket":"{}"}}"#,
@@ -213,7 +221,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, "");
+        let client = Client::new(server.url(), org, "");
 
         let _result = client
             .onboarding(username, org, bucket, None, None, None)
@@ -229,7 +237,10 @@ mod tests {
         let org = "some-org";
         let bucket = "some-bucket";
 
-        let mock_server = mock("POST", "/api/v2/setup/user")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/setup/user")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(
                 format!(
@@ -240,7 +251,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let _result = client
             .post_setup_user(username, org, bucket, None, None, None)

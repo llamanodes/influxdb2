@@ -120,7 +120,7 @@ mod tests {
     use super::*;
     use crate::models::DataPoint;
     use futures::stream;
-    use mockito::mock;
+    use mockito::ServerGuard;
 
     #[tokio::test]
     async fn writing_points() {
@@ -128,21 +128,24 @@ mod tests {
         let bucket = "some-bucket";
         let token = "some-token";
 
-        let mock_server = mock(
-            "POST",
-            format!("/api/v2/write?bucket={}&org={}&precision=ns", bucket, org).as_str(),
-        )
-        .match_header("Authorization", format!("Token {}", token).as_str())
-        .match_body(
-            "\
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock(
+                "POST",
+                format!("/api/v2/write?bucket={}&org={}&precision=ns", bucket, org).as_str(),
+            )
+            .match_header("Authorization", format!("Token {}", token).as_str())
+            .match_body(
+                "\
 cpu,host=server01 usage=0.5
 cpu,host=server01,region=us-west usage=0.87
 ",
-        )
-        .with_status(204)
-        .create();
+            )
+            .with_status(204)
+            .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let points = vec![
             DataPoint::builder("cpu")
@@ -174,20 +177,23 @@ cpu,host=server01,region=us-west usage=0.87
         let bucket = "some-bucket";
         let token = "some-token";
 
-        let mock_server = mock(
-            "POST",
-            format!("/api/v2/write?bucket={}&org={}&precision=s", bucket, org).as_str(),
-        )
-        .match_header("Authorization", format!("Token {}", token).as_str())
-        .match_body(
-            "\
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock(
+                "POST",
+                format!("/api/v2/write?bucket={}&org={}&precision=s", bucket, org).as_str(),
+            )
+            .match_header("Authorization", format!("Token {}", token).as_str())
+            .match_body(
+                "\
 cpu,host=server01 usage=0.5 1671095854
 ",
-        )
-        .with_status(204)
-        .create();
+            )
+            .with_status(204)
+            .create();
 
-        let client = Client::new(mockito::server_url(), org, token);
+        let client = Client::new(server.url(), org, token);
 
         let point = DataPoint::builder("cpu")
             .tag("host", "server01")
@@ -215,18 +221,20 @@ cpu,host=server01 usage=0.5 1671095854
         let token = "token";
         let bucket = "bucket";
 
-        let make_mock_server = |status| {
-            mock(
-                "POST",
-                format!("/api/v2/write?bucket={}&org={}&precision=ns", bucket, org).as_str(),
-            )
-            .with_status(status)
-            .create()
+        let make_mock_server = |server: &mut ServerGuard, status| {
+            server
+                .mock(
+                    "POST",
+                    format!("/api/v2/write?bucket={}&org={}&precision=ns", bucket, org).as_str(),
+                )
+                .with_status(status)
+                .create()
         };
 
         let write_with_status = |status| async move {
-            let mock_server = make_mock_server(status);
-            let client = Client::new(mockito::server_url(), org, token);
+            let mut server = mockito::Server::new();
+            let mock_server = make_mock_server(&mut server, status);
+            let client = Client::new(server.url(), org, token);
             let points: Vec<DataPoint> = vec![];
             let res = client.write(bucket, stream::iter(points)).await;
             mock_server.assert();

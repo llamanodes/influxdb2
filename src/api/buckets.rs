@@ -112,7 +112,6 @@ pub struct ListBucketsRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockito::mock;
 
     #[tokio::test]
     async fn create_bucket() {
@@ -120,7 +119,10 @@ mod tests {
         let bucket = "some-bucket".to_string();
         let token = "some-token";
 
-        let mock_server = mock("POST", "/api/v2/buckets")
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", "/api/v2/buckets")
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(
                 format!(
@@ -131,7 +133,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), &org_id, token);
+        let client = Client::new(server.url(), &org_id, token);
 
         let _result = client
             .create_bucket(Some(PostBucketRequest::new(org_id, bucket)))

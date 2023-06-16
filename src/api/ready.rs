@@ -31,13 +31,14 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockito::mock;
 
     #[tokio::test]
     async fn ready() {
-        let mock_server = mock("GET", "/ready").create();
+        let mut server = mockito::Server::new();
 
-        let client = Client::new(mockito::server_url(), "org", "");
+        let mock_server = server.mock("GET", "/ready").create();
+
+        let client = Client::new(server.url(), "org", "");
 
         let _result = client.ready().await;
 

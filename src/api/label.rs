@@ -137,7 +137,6 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockito::mock;
 
     const BASE_PATH: &str = "/api/v2/labels";
 
@@ -145,11 +144,14 @@ mod tests {
     async fn labels() {
         let token = "some-token";
 
-        let mock_server = mock("GET", BASE_PATH)
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("GET", BASE_PATH)
             .match_header("Authorization", format!("Token {}", token).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client.labels().await;
 
@@ -161,11 +163,14 @@ mod tests {
         let token = "some-token";
         let org_id = "some-org_id";
 
-        let mock_server = mock("GET", format!("{}?orgID={}", BASE_PATH, org_id).as_str())
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("GET", format!("{}?orgID={}", BASE_PATH, org_id).as_str())
             .match_header("Authorization", format!("Token {}", token).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client.labels_by_org(org_id).await;
 
@@ -177,11 +182,14 @@ mod tests {
         let token = "some-token";
         let label_id = "some-id";
 
-        let mock_server = mock("GET", format!("{}/{}", BASE_PATH, label_id).as_str())
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("GET", format!("{}/{}", BASE_PATH, label_id).as_str())
             .match_header("Authorization", format!("Token {}", token).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client.find_label(label_id).await;
 
@@ -196,7 +204,10 @@ mod tests {
         let mut properties = HashMap::new();
         properties.insert("some-key".to_string(), "some-value".to_string());
 
-        let mock_server = mock("POST", BASE_PATH)
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", BASE_PATH)
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(
                 format!(
@@ -207,7 +218,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), org_id, token);
+        let client = Client::new(server.url(), org_id, token);
 
         let _result = client.create_label(org_id, name, Some(properties)).await;
 
@@ -220,12 +231,15 @@ mod tests {
         let org_id = "some-org_id";
         let name = "some-user";
 
-        let mock_server = mock("POST", BASE_PATH)
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("POST", BASE_PATH)
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(format!(r#"{{"orgID":"{}","name":"{}"}}"#, org_id, name).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), org_id, token);
+        let client = Client::new(server.url(), org_id, token);
 
         let _result = client.create_label(org_id, name, None).await;
 
@@ -240,7 +254,10 @@ mod tests {
         let mut properties = HashMap::new();
         properties.insert("some-key".to_string(), "some-value".to_string());
 
-        let mock_server = mock("PATCH", format!("{}/{}", BASE_PATH, label_id).as_str())
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("PATCH", format!("{}/{}", BASE_PATH, label_id).as_str())
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body(
                 format!(
@@ -251,7 +268,7 @@ mod tests {
             )
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client
             .update_label(Some(name.to_string()), Some(properties), label_id)
@@ -265,12 +282,15 @@ mod tests {
         let token = "some-token";
         let label_id = "some-label_id";
 
-        let mock_server = mock("PATCH", format!("{}/{}", BASE_PATH, label_id).as_str())
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("PATCH", format!("{}/{}", BASE_PATH, label_id).as_str())
             .match_header("Authorization", format!("Token {}", token).as_str())
             .match_body("{}")
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client.update_label(None, None, label_id).await;
 
@@ -282,11 +302,14 @@ mod tests {
         let token = "some-token";
         let label_id = "some-label_id";
 
-        let mock_server = mock("DELETE", format!("{}/{}", BASE_PATH, label_id).as_str())
+        let mut server = mockito::Server::new();
+
+        let mock_server = server
+            .mock("DELETE", format!("{}/{}", BASE_PATH, label_id).as_str())
             .match_header("Authorization", format!("Token {}", token).as_str())
             .create();
 
-        let client = Client::new(mockito::server_url(), "", token);
+        let client = Client::new(server.url(), "", token);
 
         let _result = client.delete_label(label_id).await;
 
