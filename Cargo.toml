@@ -20,27 +20,27 @@ influxdb2-derive = { version = "0.1.1", path = "./influxdb2-derive" }
 
 # crates.io dependencies
 base64 = "0.13"
-bytes = { version = "1.0", default-features = false }
+bytes = { version = "1.4", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
-csv = "1.1"
+csv = "1.2"
 fallible-iterator = "0.2.0"
 futures = { version = "0.3", default-features = false }
 go-parse-duration = "0.1"
-ordered-float = "3.0"
+ordered-float = "3.7"
 reqwest = { version = "0.11", features = ["stream", "json"], default-features = false}
 secrecy = "0.8"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.44"
+serde_json = "1.0.97"
 serde_qs = "0.10"
-snafu = "0.6.6"
-tempfile = "3.1.0"
+snafu = "0.6.10"
+tempfile = "3.6.0"
 tracing = "0.1"
-url = "2.1.1"
+url = "2.4.0"
 
 [dev-dependencies] # In alphabetical order
 mockito = "0.26.0"
 num-traits = "0.2"
-once_cell = { version = "1.4.0", features = ["parking_lot"] }
-parking_lot = "0.11.1"
-tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+once_cell = { version = "1.18.0", features = ["parking_lot"] }
+parking_lot = "0.11.2"
+tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
 test_helpers = { path = "./test_helpers" }
