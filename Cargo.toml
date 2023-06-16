@@ -23,7 +23,7 @@ base64 = "0.21"
 bytes = { version = "1.4", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
 csv = "1.2"
-fallible-iterator = "0.2.0"
+fallible-iterator = "0.3.0"
 futures = { version = "0.3", default-features = false }
 go-parse-duration = "0.1"
 ordered-float = "3.7"
