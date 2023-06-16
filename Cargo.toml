@@ -19,7 +19,7 @@ influxdb2-structmap = { version = "0.2.0", path = "./influxdb2-structmap" }
 influxdb2-derive = { version = "0.1.1", path = "./influxdb2-derive" }
 
 # crates.io dependencies
-base64 = "0.13"
+base64 = "0.21"
 bytes = { version = "1.4", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
 csv = "1.2"
