@@ -16,7 +16,7 @@ impl Client {
         let qs = serde_qs::to_string(&request).unwrap();
         let mut endpoint = "/api/v2/buckets".to_owned();
         if !qs.is_empty() {
-            endpoint.push_str("?");
+            endpoint.push('?');
             endpoint.push_str(&qs);
         }
         let url = self.url(&endpoint);

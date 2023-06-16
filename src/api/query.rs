@@ -221,10 +221,8 @@ schema.measurements(bucket: "{bucket}") "#
 
                 Ok(reader
                     .records()
-                    .into_iter()
                     .flatten()
-                    .map(|r| r.get(3).map(|s| s.to_owned()))
-                    .flatten()
+                    .filter_map(|r| r.get(3).map(|s| s.to_owned()))
                     .collect())
             }
             status => {
@@ -272,10 +270,8 @@ schema.measurements(bucket: "{bucket}") "#
 
                 Ok(reader
                     .records()
-                    .into_iter()
                     .flatten()
-                    .map(|r| r.get(3).map(|s| s.to_owned()))
-                    .flatten()
+                    .filter_map(|r| r.get(3).map(|s| s.to_owned()))
                     .collect())
             }
             status => {
@@ -325,10 +321,8 @@ schema.measurements(bucket: "{bucket}") "#
 
                 Ok(reader
                     .records()
-                    .into_iter()
                     .flatten()
-                    .map(|r| r.get(3).map(|s| s.to_owned()))
-                    .flatten()
+                    .filter_map(|r| r.get(3).map(|s| s.to_owned()))
                     .collect())
             }
             status => {
@@ -354,17 +348,17 @@ enum DataType {
 impl FromStr for DataType {
     type Err = RequestError;
 
-    fn from_str(input: &str) -> Result<DataType, RequestError> {
+    fn from_str(input: &str) -> Result<Self, RequestError> {
         match input {
-            "string" => Ok(DataType::String),
-            "double" => Ok(DataType::Double),
-            "boolean" => Ok(DataType::Bool),
-            "long" => Ok(DataType::Long),
-            "unsignedLong" => Ok(DataType::UnsignedLong),
-            "duration" => Ok(DataType::Duration),
-            "base64Binary" => Ok(DataType::Base64Binary),
-            "dateTime:RFC3339" => Ok(DataType::TimeRFC),
-            "dateTime:RFC3339Nano" => Ok(DataType::TimeRFC),
+            "string" => Ok(Self::String),
+            "double" => Ok(Self::Double),
+            "boolean" => Ok(Self::Bool),
+            "long" => Ok(Self::Long),
+            "unsignedLong" => Ok(Self::UnsignedLong),
+            "duration" => Ok(Self::Duration),
+            "base64Binary" => Ok(Self::Base64Binary),
+            "dateTime:RFC3339" => Ok(Self::TimeRFC),
+            "dateTime:RFC3339Nano" => Ok(Self::TimeRFC),
             _ => Err(RequestError::Deserializing {
                 text: "unknown datatype".into(),
             }),
@@ -442,7 +436,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                 continue;
             }
             if let Some(s) = row.get(0) {
-                if s.len() > 0 && s.chars().nth(0).unwrap() == '#' {
+                if s.starts_with('#') {
                     // Finding new table, prepare for annotation parsing
                     if parsing_state == ParsingState::Normal {
                         self.table = Some(FluxTableMetadata {
@@ -502,13 +496,13 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                                 continue;
                             }
                             ParsingState::Error => {
-                                let msg = if row.len() > 1 && row.get(1).unwrap().len() > 0 {
+                                let msg = if row.len() > 1 && !row.get(1).unwrap().is_empty() {
                                     row.get(1).unwrap()
                                 } else {
                                     "unknown query error"
                                 };
                                 let mut reference = String::from("");
-                                if row.len() > 2 && row.get(2).unwrap().len() > 0 {
+                                if row.len() > 2 && !row.get(2).unwrap().is_empty() {
                                     let s = row.get(2).unwrap();
                                     reference = format!(",{}", s);
                                 }
@@ -525,7 +519,7 @@ impl<'a> FallibleIterator for QueryTableResult<'a> {
                             if v.is_empty() {
                                 v = &column.default_value[..];
                             }
-                            let value = parse_value(v, column.data_type, &column.name.as_str())?;
+                            let value = parse_value(v, column.data_type, column.name.as_str())?;
                             values.entry(column.name.clone()).or_insert(value);
                         }
                         record = FluxRecord {
@@ -571,7 +565,7 @@ struct QueryResult {
 }
 
 impl QueryResult {
-    fn new<'a>(qtr: QueryTableResult<'a>) -> Result<Self, RequestError> {
+    fn new(qtr: QueryTableResult<'_>) -> Result<Self, RequestError> {
         let ignored_keys = vec!["_field", "_value", "table"];
         let ignored_keys: HashSet<&str> = ignored_keys.into_iter().collect();
 
