@@ -627,11 +627,15 @@ fn parse_value(s: &str, t: DataType, name: &str) -> Result<Value, RequestError> 
     match t {
         DataType::String => Ok(Value::String(String::from(s))),
         DataType::Double => {
-            let v = s
-                .parse::<f64>()
-                .map_err(|err| RequestError::Deserializing {
-                    text: format!("invalid double: {}, name: {}, err: {:?}", s, name, err).into(),
-                })?;
+            let v = if s.is_empty() {
+                0.0
+            } else {
+                s.parse::<f64>()
+                    .map_err(|err| RequestError::Deserializing {
+                        text: format!("invalid double: {}, name: {}, err: {:?}", s, name, err)
+                            .into(),
+                    })?
+            };
             Ok(Value::Double(OrderedFloat::from(v)))
         }
         DataType::Bool => {
@@ -642,23 +646,29 @@ fn parse_value(s: &str, t: DataType, name: &str) -> Result<Value, RequestError> 
             }
         }
         DataType::Long => {
-            let v = s
-                .parse::<i64>()
-                .map_err(|err| RequestError::Deserializing {
-                    text: format!("invalid long: {}, name: {}, err: {:?}", s, name, err).into(),
-                })?;
+            let v = if s.is_empty() {
+                0
+            } else {
+                s.parse::<i64>()
+                    .map_err(|err| RequestError::Deserializing {
+                        text: format!("invalid long: {}, name: {}, err: {:?}", s, name, err).into(),
+                    })?
+            };
             Ok(Value::Long(v))
         }
         DataType::UnsignedLong => {
-            let v = s
-                .parse::<u64>()
-                .map_err(|err| RequestError::Deserializing {
-                    text: format!(
-                        "invalid unsigned long: {}, name: {}, err: {:?}",
-                        s, name, err
-                    )
-                    .into(),
-                })?;
+            let v = if s.is_empty() {
+                0
+            } else {
+                s.parse::<u64>()
+                    .map_err(|err| RequestError::Deserializing {
+                        text: format!(
+                            "invalid unsigned long: {}, name: {}, err: {:?}",
+                            s, name, err
+                        )
+                        .into(),
+                    })?
+            };
             Ok(Value::UnsignedLong(v))
         }
         DataType::Duration => match parse_duration(s) {
